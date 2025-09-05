@@ -1,111 +1,159 @@
 package org.example
 
-import java.time.format.DateTimeFormatter
+import java.util.Scanner
 
-fun mostrarProducto() {
-    val producto1 = Producto(
-        nombre = "PlayStation 5",
-        descripcion = "Consola de última generación",
-        costo = 999.99
-    )
-    val producto2 = Producto(
-        nombre = "Notebook Lenovo",
-        descripcion = "Notebook para uso profesional",
-        costo = 1200.0
-    )
-    val producto3 = Producto(
-        nombre = "Smart TV Samsung",
-        descripcion = "Televisor inteligente 4K",
-        costo = 1800.0
-    )
-    val producto4 = Producto(
-        nombre = "Tablet Apple",
-        descripcion = "Tablet de alta gama",
-        costo = 400.0
-    )
-    val producto5 = Producto(
-        nombre = "Smartphone Motorola",
-        descripcion = "Teléfono inteligente",
-        costo = 300.0
-    )
-    val producto6 = Producto(
-        nombre = "Auriculares Sony",
-        descripcion = "Auriculares inalámbricos",
-        costo = 150.0
-    )
-    val producto7 = Producto(
-        nombre = "Cámara Canon",
-        descripcion = "Cámara réflex digital",
-        costo = 800.0
-    )
-    val producto8 = Producto(
-        nombre = "Impresora HP",
-        descripcion = "Impresora multifunción",
-        costo = 200.0
-    )
-    val producto9 = Producto(
-        nombre = "Monitor Dell",
-        descripcion = "Monitor LED 24 pulgadas",
-        costo = 250.0
-    )
-    val producto10 = Producto(
-        nombre = "Teclado Snapdragon",
-        descripcion = "Teclado mecánico para gaming",
-        costo = 400.0
-    )    
+fun gestionarInventarioPorConsola() {
+    val inventario = Inventario.cargar() // Cargar inventario desde archivo
+    val scanner = Scanner(System.`in`)
 
-    val movimientos = listOf(
-        MovimientoInventario(producto1, 15, tipo = TipoMovimiento.ENTRADA),
-        MovimientoInventario(producto1, 5, tipo = TipoMovimiento.SALIDA),
-        MovimientoInventario(producto2, 20, tipo = TipoMovimiento.ENTRADA),
-        MovimientoInventario(producto2, 7, tipo = TipoMovimiento.SALIDA),
-        MovimientoInventario(producto3, 10, tipo = TipoMovimiento.ENTRADA),
-        MovimientoInventario(producto3, 3, tipo = TipoMovimiento.SALIDA),
-        MovimientoInventario(producto4, 25, tipo = TipoMovimiento.ENTRADA),
-        MovimientoInventario(producto4, 10, tipo = TipoMovimiento.SALIDA),
-        MovimientoInventario(producto5, 30, tipo = TipoMovimiento.ENTRADA),
-        MovimientoInventario(producto5, 12, tipo = TipoMovimiento.SALIDA),
-        MovimientoInventario(producto6, 18, tipo = TipoMovimiento.ENTRADA),
-        MovimientoInventario(producto6, 6, tipo = TipoMovimiento.SALIDA),
-        MovimientoInventario(producto7, 8, tipo = TipoMovimiento.ENTRADA),
-        MovimientoInventario(producto7, 2, tipo = TipoMovimiento.SALIDA),
-        MovimientoInventario(producto8, 22, tipo = TipoMovimiento.ENTRADA),
-        MovimientoInventario(producto8, 9, tipo = TipoMovimiento.SALIDA),
-        MovimientoInventario(producto9, 14, tipo = TipoMovimiento.ENTRADA),
-        MovimientoInventario(producto9, 4, tipo = TipoMovimiento.SALIDA),
-        MovimientoInventario(producto10, 16, tipo = TipoMovimiento.ENTRADA),
-        MovimientoInventario(producto10, 5, tipo = TipoMovimiento.SALIDA)
-    )
+    println("Bienvenido al sistema de inventario.")
 
-    println("Productos:")
-    println("--------------------------------------------------------------------------------")
-    println(String.format("%-20s | %-30s | %-10s", "Nombre", "Descripción", "Costo"))
-    println("--------------------------------------------------------------------------------")
-    listOf(producto1, producto2, producto3, producto4, producto5, producto6, producto7, producto8, producto9, producto10).forEach {
-        println(String.format("%-20s | %-30s | $%9.2f", it.nombre, it.descripcion, it.costo))
+    while (true) {
+        println("\nSeleccione una opción:")
+        println("1 - Agregar producto nuevo al stock")
+        println("2 - Agregar cantidad de producto existente")
+        println("3 - Vender algún producto")
+        println("4 - Mostrar inventario actual")
+        println("5 - Salir")
+        print("Opción: ")
+
+        if (!scanner.hasNextLine()) {
+            println("\nNo se detectó más entrada. Saliendo...")
+            break
+        }
+        val opcion = scanner.nextLine().trim()
+
+        when (opcion) {
+            "1" -> { // Agregar producto nuevo
+                println("Agregar producto nuevo:")
+                print("Nombre: ")
+                if (!scanner.hasNextLine()) break
+                val nombre = scanner.nextLine().trim()
+
+                print("Descripción: ")
+                if (!scanner.hasNextLine()) break
+                val descripcion = scanner.nextLine().trim()
+
+                print("Precio: ")
+                if (!scanner.hasNextLine()) break
+                val precioStr = scanner.nextLine().trim()
+                val precio = precioStr.toDoubleOrNull()
+                if (precio == null || precio < 0) {
+                    println("Precio inválido. Intente de nuevo.")
+                    continue
+                }
+
+                print("Cantidad inicial: ")
+                if (!scanner.hasNextLine()) break
+                val cantidadStr = scanner.nextLine().trim()
+                val cantidad = cantidadStr.toIntOrNull()
+                if (cantidad == null || cantidad < 0) {
+                    println("Cantidad inválida. Intente de nuevo.")
+                    continue
+                }
+
+                val producto = Producto(nombre = nombre, descripcion = descripcion, costo = precio)
+                inventario.agregarOActualizarProducto(producto, cantidad)
+                println("Producto agregado correctamente.")
+            }
+
+            "2" -> { // Agregar cantidad a producto existente
+                println("Agregar cantidad a producto existente:")
+                print("Nombre del producto: ")
+                if (!scanner.hasNextLine()) break
+                val nombre = scanner.nextLine().trim()
+
+                val productoExistente = inventario.obtenerProductos()
+                    .find { it.nombre.equals(nombre, ignoreCase = true) }
+
+                if (productoExistente == null) {
+                    println("Producto no encontrado en el inventario.")
+                    continue
+                }
+
+                print("Cantidad a agregar: ")
+                if (!scanner.hasNextLine()) break
+                val cantidadStr = scanner.nextLine().trim()
+                val cantidad = cantidadStr.toIntOrNull()
+                if (cantidad == null || cantidad <= 0) {
+                    println("Cantidad inválida. Intente de nuevo.")
+                    continue
+                }
+
+                inventario.agregarOActualizarProducto(productoExistente, cantidad)
+                println("Stock actualizado correctamente.")
+            }
+
+            "3" -> { // Vender producto
+                println("Vender producto:")
+                print("Nombre del producto: ")
+                if (!scanner.hasNextLine()) break
+                val nombre = scanner.nextLine().trim()
+
+                val productoExistente = inventario.obtenerProductos()
+                    .find { it.nombre.equals(nombre, ignoreCase = true) }
+
+                if (productoExistente == null) {
+                    println("Producto no encontrado en el inventario.")
+                    continue
+                }
+
+                print("Cantidad a vender: ")
+                if (!scanner.hasNextLine()) break
+                val cantidadStr = scanner.nextLine().trim()
+                val cantidad = cantidadStr.toIntOrNull()
+                if (cantidad == null || cantidad <= 0) {
+                    println("Cantidad inválida. Intente de nuevo.")
+                    continue
+                }
+
+                val stockActual = inventario.obtenerCantidad(productoExistente)
+                if (cantidad > stockActual) {
+                    println("No hay suficiente stock. Stock disponible: $stockActual")
+                    continue
+                }
+
+                // Reducir stock
+                inventario.agregarOActualizarProducto(productoExistente, -cantidad)
+                println("Venta realizada. Stock restante: ${inventario.obtenerCantidad(productoExistente)}")
+            }
+
+            "4" -> { // Mostrar inventario
+                println("\nInventario actual:")
+                println("------------------------------------------------------------------------------------------------------------")
+                println(String.format("%-36s | %-20s | %-30s | %-10s | %-10s", "ID", "Nombre", "Descripción", "Precio", "Cantidad"))
+                println("------------------------------------------------------------------------------------------------------------")
+                inventario.obtenerProductos().forEach { producto ->
+                    val cantidad = inventario.obtenerCantidad(producto)
+                    println(
+                        String.format(
+                            "%-36s | %-20s | %-30s | $%9.2f | %10d",
+                            producto.id,
+                            producto.nombre,
+                            producto.descripcion,
+                            producto.costo,
+                            cantidad
+                        )
+                    )
+                }
+                println("------------------------------------------------------------------------------------------------------------")
+            }
+
+            "5" -> { // Salir
+                println("Saliendo del programa...")
+                break
+            }
+
+            else -> {
+                println("Opción inválida. Intente de nuevo.")
+            }
+        }
     }
-    println()
-
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-
-    println("Movimientos de Inventario:")
-    println("---------------------------------------------------------------------------------------------")
-    println(String.format("%-20s | %-8s | %-10s | %-19s", "Producto", "Tipo", "Cantidad", "Fecha y Hora"))
-    println("---------------------------------------------------------------------------------------------")
-    movimientos.forEach { mov ->
-        val tipoStr = if (mov.tipo == TipoMovimiento.ENTRADA) "Entrada" else "Salida"
-        println(
-            String.format(
-                "%-20s | %-8s | %10d | %-19s",
-                mov.producto.nombre,
-                tipoStr,
-                mov.cantidad,
-                mov.fecha.format(formatter)
-            )
-        )
-    }
-    println("---------------------------------------------------------------------------------------------")
 }
+
+
+
+
 
 
 
