@@ -1,5 +1,4 @@
 package org.example
-
 import java.io.*
 
 class Inventario : Serializable {
@@ -23,15 +22,25 @@ class Inventario : Serializable {
     }
 
     fun agregarOActualizarProducto(nuevoProducto: Producto, cantidad: Int) {
-        require(cantidad >= 0) { "La cantidad no puede ser negativa" }
         val productoExistente = stock.keys.find { it.nombre.equals(nuevoProducto.nombre, ignoreCase = true) }
+
         if (productoExistente != null) {
             val stockActual = stock[productoExistente] ?: 0
-            stock[productoExistente] = stockActual + cantidad
+            val nuevoStock = stockActual + cantidad
+            require(nuevoStock >= 0) { "No hay suficiente stock para realizar la operación." }
+
+            if (nuevoStock == 0) {
+                stock.remove(productoExistente) // eliminar producto cuando no queda stock
+            } else {
+                stock[productoExistente] = nuevoStock
+            }
         } else {
-            stock[nuevoProducto] = cantidad
+            require(cantidad >= 0) { "No se puede iniciar un producto con stock negativo." }
+            if (cantidad > 0) {
+                stock[nuevoProducto] = cantidad
+            }
         }
-        guardar() // Guardar cada vez que se actualiza
+        guardar()
     }
 
     fun obtenerStock(producto: Producto): Int {
@@ -46,5 +55,7 @@ class Inventario : Serializable {
         return stock[producto] ?: 0
     }
 }
+
+
 
 
