@@ -1,7 +1,8 @@
 package org.example
+
 import java.io.*
 
-class Inventario : Serializable {
+class Inventario(private val historial: HistorialInventario = HistorialInventario.cargar()) : Serializable {
 
     private val stock: MutableMap<Producto, Int> = mutableMapOf()
 
@@ -12,7 +13,7 @@ class Inventario : Serializable {
             return try {
                 ObjectInputStream(FileInputStream(FILE_NAME)).use { it.readObject() as Inventario }
             } catch (e: Exception) {
-                Inventario() // Si no existe archivo, se crea uno nuevo
+                Inventario()
             }
         }
     }
@@ -21,8 +22,8 @@ class Inventario : Serializable {
         ObjectOutputStream(FileOutputStream(FILE_NAME)).use { it.writeObject(this) }
     }
 
-    fun agregarOActualizarProducto(nuevoProducto: Producto, cantidad: Int) {
-        val productoExistente = stock.keys.find { it.nombre.equals(nuevoProducto.nombre, ignoreCase = true) }
+    fun actualizarStock(producto: Producto, cantidad: Int, tipo: TipoMovimiento) {
+        val productoExistente = stock.keys.find { it.nombre.equals(producto.nombre, ignoreCase = true) }
 
         if (productoExistente != null) {
             val stockActual = stock[productoExistente] ?: 0
@@ -30,14 +31,18 @@ class Inventario : Serializable {
             require(nuevoStock >= 0) { "No hay suficiente stock para realizar la operación." }
 
             if (nuevoStock == 0) {
-                stock.remove(productoExistente) // eliminar producto cuando no queda stock
+                stock.remove(productoExistente)
             } else {
                 stock[productoExistente] = nuevoStock
             }
+
+            // registrar usando la instancia de producto existente (misma id)
+            historial.registrarMovimiento(MovimientoInventario(productoExistente, cantidad, tipo = tipo))
         } else {
             require(cantidad >= 0) { "No se puede iniciar un producto con stock negativo." }
             if (cantidad > 0) {
-                stock[nuevoProducto] = cantidad
+                stock[producto] = cantidad
+                historial.registrarMovimiento(MovimientoInventario(producto, cantidad, tipo = tipo))
             }
         }
         guardar()
@@ -55,6 +60,7 @@ class Inventario : Serializable {
         return stock[producto] ?: 0
     }
 }
+
 
 
 

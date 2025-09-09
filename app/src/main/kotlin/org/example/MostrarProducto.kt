@@ -3,7 +3,7 @@ package org.example
 import java.util.Scanner
 
 fun gestionarInventarioPorConsola() {
-    val inventario = Inventario.cargar() // Cargar inventario desde archivo
+    val inventario = Inventario.cargar()
     val scanner = Scanner(System.`in`)
 
     println("Bienvenido al sistema de inventario.")
@@ -14,17 +14,15 @@ fun gestionarInventarioPorConsola() {
         println("2 - Agregar cantidad de producto existente")
         println("3 - Vender algún producto")
         println("4 - Mostrar inventario actual")
-        println("5 - Salir")
+        println("5 - Mostrar historial de movimientos")
+        println("6 - Salir")
         print("Opción: ")
 
-        if (!scanner.hasNextLine()) {
-            println("\nNo se detectó más entrada. Saliendo...")
-            break
-        }
+        if (!scanner.hasNextLine()) break
         val opcion = scanner.nextLine().trim()
 
         when (opcion) {
-            "1" -> { // Agregar producto nuevo
+            "1" -> {
                 println("Agregar producto nuevo:")
                 print("Nombre: ")
                 if (!scanner.hasNextLine()) break
@@ -36,28 +34,26 @@ fun gestionarInventarioPorConsola() {
 
                 print("Precio: ")
                 if (!scanner.hasNextLine()) break
-                val precioStr = scanner.nextLine().trim()
-                val precio = precioStr.toDoubleOrNull()
+                val precio = scanner.nextLine().trim().toDoubleOrNull()
                 if (precio == null || precio < 0) {
-                    println("Precio inválido. Intente de nuevo.")
+                    println("Precio inválido.")
                     continue
                 }
 
                 print("Cantidad inicial: ")
                 if (!scanner.hasNextLine()) break
-                val cantidadStr = scanner.nextLine().trim()
-                val cantidad = cantidadStr.toIntOrNull()
+                val cantidad = scanner.nextLine().trim().toIntOrNull()
                 if (cantidad == null || cantidad < 0) {
-                    println("Cantidad inválida. Intente de nuevo.")
+                    println("Cantidad inválida.")
                     continue
                 }
 
                 val producto = Producto(nombre = nombre, descripcion = descripcion, costo = precio)
-                inventario.agregarOActualizarProducto(producto, cantidad)
+                inventario.actualizarStock(producto, cantidad, TipoMovimiento.ENTRADA)
                 println("Producto agregado correctamente.")
             }
 
-            "2" -> { // Agregar cantidad a producto existente
+            "2" -> {
                 println("Agregar cantidad a producto existente:")
                 print("Nombre del producto: ")
                 if (!scanner.hasNextLine()) break
@@ -65,26 +61,24 @@ fun gestionarInventarioPorConsola() {
 
                 val productoExistente = inventario.obtenerProductos()
                     .find { it.nombre.equals(nombre, ignoreCase = true) }
-
                 if (productoExistente == null) {
-                    println("Producto no encontrado en el inventario.")
+                    println("Producto no encontrado.")
                     continue
                 }
 
                 print("Cantidad a agregar: ")
                 if (!scanner.hasNextLine()) break
-                val cantidadStr = scanner.nextLine().trim()
-                val cantidad = cantidadStr.toIntOrNull()
+                val cantidad = scanner.nextLine().trim().toIntOrNull()
                 if (cantidad == null || cantidad <= 0) {
-                    println("Cantidad inválida. Intente de nuevo.")
+                    println("Cantidad inválida.")
                     continue
                 }
 
-                inventario.agregarOActualizarProducto(productoExistente, cantidad)
+                inventario.actualizarStock(productoExistente, cantidad, TipoMovimiento.ENTRADA)
                 println("Stock actualizado correctamente.")
             }
 
-            "3" -> { // Vender producto
+            "3" -> {
                 println("Vender producto:")
                 print("Nombre del producto: ")
                 if (!scanner.hasNextLine()) break
@@ -92,33 +86,30 @@ fun gestionarInventarioPorConsola() {
 
                 val productoExistente = inventario.obtenerProductos()
                     .find { it.nombre.equals(nombre, ignoreCase = true) }
-
                 if (productoExistente == null) {
-                    println("Producto no encontrado en el inventario.")
+                    println("Producto no encontrado.")
                     continue
                 }
 
                 print("Cantidad a vender: ")
                 if (!scanner.hasNextLine()) break
-                val cantidadStr = scanner.nextLine().trim()
-                val cantidad = cantidadStr.toIntOrNull()
+                val cantidad = scanner.nextLine().trim().toIntOrNull()
                 if (cantidad == null || cantidad <= 0) {
-                    println("Cantidad inválida. Intente de nuevo.")
+                    println("Cantidad inválida.")
                     continue
                 }
 
                 val stockActual = inventario.obtenerCantidad(productoExistente)
                 if (cantidad > stockActual) {
-                    println("No hay suficiente stock. Stock disponible: $stockActual")
+                    println("Stock insuficiente. Disponible: $stockActual")
                     continue
                 }
 
-                // Reducir stock
-                inventario.agregarOActualizarProducto(productoExistente, -cantidad)
+                inventario.actualizarStock(productoExistente, -cantidad, TipoMovimiento.SALIDA)
                 println("Venta realizada. Stock restante: ${inventario.obtenerCantidad(productoExistente)}")
             }
 
-            "4" -> { // Mostrar inventario
+            "4" -> {
                 println("\nInventario actual:")
                 println("------------------------------------------------------------------------------------------------------------")
                 println(String.format("%-36s | %-20s | %-30s | %-10s | %-10s", "ID", "Nombre", "Descripción", "Precio", "Cantidad"))
@@ -139,17 +130,82 @@ fun gestionarInventarioPorConsola() {
                 println("------------------------------------------------------------------------------------------------------------")
             }
 
-            "5" -> { // Salir
+           "5" -> {
+    val historial = HistorialInventario.cargar()
+
+    println("\nSeleccione una opción:")
+    println("1 - Ver historial completo")
+    println("2 - Ver historial por producto")
+    val subopcion = scanner.nextLine().trim()
+
+    if (subopcion == "1") {
+        println("\nHistorial completo de movimientos:")
+        println("----------------------------------------------------------------------------------------------------------------")
+        println(String.format("%-20s | %-10s | %-20s | %-10s | %-10s", "Fecha", "Tipo", "Producto", "Cantidad", "Stock Final"))
+        println("----------------------------------------------------------------------------------------------------------------")
+        historial.obtenerTodos().forEach { mov ->
+            val stockDespues = inventario.obtenerCantidad(mov.producto)
+            println(
+                String.format(
+                    "%-20s | %-10s | %-20s | %10d | %10d",
+                    mov.fecha,
+                    mov.tipo,
+                    mov.producto.nombre,
+                    mov.cantidad,
+                    stockDespues
+                )
+            )
+        }
+        println("----------------------------------------------------------------------------------------------------------------")
+    } else if (subopcion == "2") {
+        print("Ingrese el nombre del producto: ")
+        val nombreProducto = scanner.nextLine().trim()
+        val producto = inventario.obtenerProductos()
+            .find { it.nombre.equals(nombreProducto, ignoreCase = true) }
+
+        if (producto == null) {
+            println("Producto no encontrado en el inventario o en el historial.")
+        } else {
+            val movimientos = historial.obtenerHistorialPorProducto(producto)
+            if (movimientos.isEmpty()) {
+                println("No hay movimientos registrados para ${producto.nombre}.")
+            } else {
+                println("\nHistorial de movimientos del producto: ${producto.nombre}")
+                println("------------------------------------------------------------------------------------------------------")
+                println(String.format("%-30s | %-10s | %-10s | %-10s", "Fecha", "Tipo", "Cantidad", "Stock Final"))
+                println("------------------------------------------------------------------------------------------------------")
+
+                var stockAcumulado = 0
+                movimientos.forEach { mov ->
+                    stockAcumulado += mov.cantidad
+                    println(
+                        String.format(
+                            "%-30s | %-10s | %10d | %10d",
+                            mov.fecha,
+                            mov.tipo,
+                            mov.cantidad,
+                            stockAcumulado
+                        )
+                    )
+                }
+                println("------------------------------------------------------------------------------------------------------")
+            }
+        }
+    } else {
+        println("Opción inválida.")
+    }
+              }
+
+            "6" -> {
                 println("Saliendo del programa...")
                 break
             }
 
-            else -> {
-                println("Opción inválida. Intente de nuevo.")
-            }
+            else -> println("Opción inválida. Intente de nuevo.")
         }
     }
 }
+
 
 
 

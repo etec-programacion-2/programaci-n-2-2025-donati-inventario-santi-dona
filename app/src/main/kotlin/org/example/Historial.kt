@@ -33,8 +33,10 @@ class HistorialInventario : Serializable {
             .filter { it.producto.id == producto.id }
             .sortedBy { it.fecha }
     }
+
     fun obtenerTodos(): List<MovimientoInventario> {
         return movimientos.sortedBy { it.fecha }.toList()
     }
 }
+
 
