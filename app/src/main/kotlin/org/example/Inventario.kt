@@ -1,18 +1,18 @@
 package org.example
 import java.io.*
 
-class Inventario : Serializable {
+class Inventario(private val historial: HistorialInventario) : Serializable {
 
     private val stock: MutableMap<Producto, Int> = mutableMapOf()
 
     companion object {
         private const val FILE_NAME = "inventario.dat"
 
-        fun cargar(): Inventario {
+        fun cargar(historial: HistorialInventario): Inventario {
             return try {
                 ObjectInputStream(FileInputStream(FILE_NAME)).use { it.readObject() as Inventario }
             } catch (e: Exception) {
-                Inventario() // Si no existe archivo, se crea uno nuevo
+                Inventario(historial)
             }
         }
     }
@@ -21,25 +21,38 @@ class Inventario : Serializable {
         ObjectOutputStream(FileOutputStream(FILE_NAME)).use { it.writeObject(this) }
     }
 
-    fun agregarOActualizarProducto(nuevoProducto: Producto, cantidad: Int) {
-        val productoExistente = stock.keys.find { it.nombre.equals(nuevoProducto.nombre, ignoreCase = true) }
+    fun registrarEntrada(producto: Producto, cantidad: Int) {
+        require(cantidad > 0) { "La cantidad debe ser mayor a 0." }
 
+        val productoExistente = stock.keys.find { it.nombre.equals(producto.nombre, ignoreCase = true) }
         if (productoExistente != null) {
             val stockActual = stock[productoExistente] ?: 0
-            val nuevoStock = stockActual + cantidad
-            require(nuevoStock >= 0) { "No hay suficiente stock para realizar la operación." }
-
-            if (nuevoStock == 0) {
-                stock.remove(productoExistente) // eliminar producto cuando no queda stock
-            } else {
-                stock[productoExistente] = nuevoStock
-            }
+            stock[productoExistente] = stockActual + cantidad
+            historial.registrarMovimiento(MovimientoInventario(productoExistente, cantidad, tipo = TipoMovimiento.ENTRADA))
         } else {
-            require(cantidad >= 0) { "No se puede iniciar un producto con stock negativo." }
-            if (cantidad > 0) {
-                stock[nuevoProducto] = cantidad
-            }
+            stock[producto] = cantidad
+            historial.registrarMovimiento(MovimientoInventario(producto, cantidad, tipo = TipoMovimiento.ENTRADA))
         }
+        guardar()
+    }
+
+    fun registrarSalida(producto: Producto, cantidad: Int) {
+        require(cantidad > 0) { "La cantidad debe ser mayor a 0." }
+
+        val productoExistente = stock.keys.find { it.nombre.equals(producto.nombre, ignoreCase = true) }
+            ?: throw IllegalArgumentException("El producto no existe en el inventario.")
+
+        val stockActual = stock[productoExistente] ?: 0
+        require(stockActual >= cantidad) { "Stock insuficiente. Disponible: $stockActual" }
+
+        val nuevoStock = stockActual - cantidad
+        if (nuevoStock == 0) {
+            stock.remove(productoExistente)
+        } else {
+            stock[productoExistente] = nuevoStock
+        }
+
+        historial.registrarMovimiento(MovimientoInventario(productoExistente, -cantidad, tipo = TipoMovimiento.SALIDA))
         guardar()
     }
 
