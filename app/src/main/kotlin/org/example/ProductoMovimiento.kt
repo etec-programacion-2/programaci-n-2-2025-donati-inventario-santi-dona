@@ -7,7 +7,7 @@ import java.util.UUID
 data class Producto(
     val id: String = UUID.randomUUID().toString(),
     val nombre: String,
-    val descripcion: String,
+    val descripcion: String = "",
     val costo: Double
 ) : Serializable
 
@@ -22,5 +22,6 @@ data class MovimientoInventario(
     val fecha: LocalDateTime = LocalDateTime.now(),
     val tipo: TipoMovimiento
 ) : Serializable
+
 
 
