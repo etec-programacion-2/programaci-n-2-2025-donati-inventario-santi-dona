@@ -22,6 +22,3 @@ data class MovimientoInventario(
     val fecha: LocalDateTime = LocalDateTime.now(),
     val tipo: TipoMovimiento
 ) : Serializable
-
-
-
