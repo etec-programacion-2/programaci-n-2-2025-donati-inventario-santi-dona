@@ -3,7 +3,7 @@ package org.example
 import java.awt.*
 import javax.swing.*
 
-class VentanaPrincipal(private val usuario: Usuario) : JFrame("Gestor de Inventario - Libertia") {
+class VentanaPrincipal(private val usuario: Usuario) : JFrame("Gestor de Inventario") {
     private val panelPrincipal = JPanel(BorderLayout())
     private val sidebar = JPanel()
     private val colorAzulOscuro = Color(0, 70, 160)
@@ -26,7 +26,7 @@ class VentanaPrincipal(private val usuario: Usuario) : JFrame("Gestor de Inventa
         sidebar.background = colorAzulOscuro
         sidebar.preferredSize = Dimension(200, height)
 
-        val titulo = JLabel("Libertia", JLabel.CENTER)
+        val titulo = JLabel("Donatock", JLabel.CENTER)
         titulo.font = Font("Segoe UI", Font.BOLD, 18)
         titulo.foreground = Color.WHITE
         titulo.alignmentX = Component.CENTER_ALIGNMENT
