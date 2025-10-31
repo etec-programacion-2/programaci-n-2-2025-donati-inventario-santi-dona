@@ -3,7 +3,7 @@ package org.example
 import java.awt.*
 import javax.swing.*
 
-class VentanaPrincipal(private val usuario: Usuario) : JFrame("Gestor de Inventario - Libertia") {
+class VentanaPrincipal(private val usuario: Usuario) : JFrame("Gestor de Inventario") {
     private val panelPrincipal = JPanel(BorderLayout())
     private val sidebar = JPanel()
     private val colorAzulOscuro = Color(0, 70, 160)
@@ -49,7 +49,28 @@ class VentanaPrincipal(private val usuario: Usuario) : JFrame("Gestor de Inventa
         sidebar.add(btnBuscar)
         sidebar.add(Box.createVerticalStrut(10))
 
+        // Botón de Exportar con menú desplegable
+        val btnExportar = crearBotonSidebar("📤 Exportar")
+        val popupMenu = JPopupMenu()
+        val itemExportarStock = JMenuItem("Exportar Stock")
+        itemExportarStock.addActionListener { Exportar.exportarStockAExcel() }
+        val itemExportarHistorial = JMenuItem("Exportar Historial")
+        itemExportarHistorial.addActionListener { Exportar.exportarHistorialAExcel(null) }
+        val itemExportarAmbos = JMenuItem("Exportar Ambos")
+        itemExportarAmbos.addActionListener { Exportar.exportarAmbosAExcel() }
+        popupMenu.add(itemExportarStock)
+        popupMenu.add(itemExportarHistorial)
+        popupMenu.add(itemExportarAmbos)
+        btnExportar.addActionListener { popupMenu.show(btnExportar, 0, btnExportar.height) }
+        sidebar.add(btnExportar)
+        sidebar.add(Box.createVerticalStrut(10))
+
         if (usuario.esAdmin) {
+            val btnGestionarUsuarios = crearBotonSidebar("👥 Gestionar Usuarios")
+            btnGestionarUsuarios.addActionListener { mostrarPanelUsuarios() }
+            sidebar.add(btnGestionarUsuarios)
+            sidebar.add(Box.createVerticalStrut(10))
+
             val btnGanancias = crearBotonSidebar("💰 Ganancias")
             btnGanancias.addActionListener { mostrarPanelGanancias() }
             sidebar.add(btnGanancias)
@@ -57,7 +78,7 @@ class VentanaPrincipal(private val usuario: Usuario) : JFrame("Gestor de Inventa
         }
 
         val btnMiCuenta = crearBotonSidebar("👤 Mi Cuenta")
-        val popupMenu = JPopupMenu()
+        val popupMenuCuenta = JPopupMenu()
         val itemCerrarSesion = JMenuItem("Cerrar Sesión")
         itemCerrarSesion.addActionListener {
             dispose()
@@ -83,9 +104,9 @@ class VentanaPrincipal(private val usuario: Usuario) : JFrame("Gestor de Inventa
                 }
             }
         }
-        popupMenu.add(itemCerrarSesion)
-        popupMenu.add(itemBorrarCuenta)
-        btnMiCuenta.addActionListener { popupMenu.show(btnMiCuenta, 0, btnMiCuenta.height) }
+        popupMenuCuenta.add(itemCerrarSesion)
+        popupMenuCuenta.add(itemBorrarCuenta)
+        btnMiCuenta.addActionListener { popupMenuCuenta.show(btnMiCuenta, 0, btnMiCuenta.height) }
 
         sidebar.add(Box.createVerticalGlue())
         sidebar.add(btnMiCuenta)
@@ -126,6 +147,13 @@ class VentanaPrincipal(private val usuario: Usuario) : JFrame("Gestor de Inventa
         panelPrincipal.repaint()
     }
 
+    private fun mostrarPanelUsuarios() {
+        panelPrincipal.removeAll()
+        panelPrincipal.add(PanelUsuarios(usuario), BorderLayout.CENTER)
+        panelPrincipal.revalidate()
+        panelPrincipal.repaint()
+    }
+
     private fun mostrarPanelGanancias() {
         panelPrincipal.removeAll()
         panelPrincipal.add(PanelGanancias(usuario), BorderLayout.CENTER)
@@ -133,6 +161,8 @@ class VentanaPrincipal(private val usuario: Usuario) : JFrame("Gestor de Inventa
         panelPrincipal.repaint()
     }
 }
+
+
 
 
 
