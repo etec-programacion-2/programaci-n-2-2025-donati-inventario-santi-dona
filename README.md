@@ -2,7 +2,7 @@ Gestor de inventario
 Para que el proyecto funcione en terminal colocar:
   git clone git@github.com:etec-programacion-2/programaci-n-2-2025-donati-inventario-santi-dona.git
   cd programaci-n-2-2025-donati-inventario-santi-dona
-  gradle run --no-configuration-cache
+  ./gradlew run
 Las versiones que hay que tener son:
   Java 21
   Kotlin 2.2.0
